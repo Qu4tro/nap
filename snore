@@ -5,6 +5,8 @@ from time import sleep as snore
 
 from datetime import timedelta, date, datetime, time
 
+# ##################### Parsing #####################
+
 
 def convert_to_timedelta(time_str):
     """
@@ -40,14 +42,21 @@ def convert_to_timedelta(time_str):
                      seconds=time_dict['s'])
 
 
-def snore_for(time_delta):
-    then = datetime.now() + time_delta
+# ##################### The bed - Where it sleeps #####################
+
+
+def snore_for(time_delta, quietly):
+    now = datetime.now()
+    then = now + time_delta
     seconds_to_snore = time_delta.total_seconds()
+
+    if not(quietly):
+        print_exact_relative_time(then, now)  # Sleeptalking
 
     snore(seconds_to_snore)
 
 
-def wait_until(time_delta):
+def wait_until(time_delta, quietly):
 
     def time_to_wait(time_delta):
         now = datetime.now()
@@ -58,39 +67,125 @@ def wait_until(time_delta):
 
         return then - now
 
-    snore_for(time_to_wait(time_delta))
+    snore_for(time_to_wait(time_delta), quietly)
+
+
+# ##################### Preparing output #####################
+
+def print_exact_relative_time(then, now):
+
+    def str_exact_time(then, now):
+
+        if now.day == then.day:
+            day = 'today'
+        elif (now + timedelta(days=1)).day == then.day:
+            day = 'tomorrow'
+        else:
+            day = then.date()
+
+        exact_time = "{}:{}:{} of {}".format(then.hour, then.minute,
+                                             then.second, day)
+
+        return exact_time
+
+    def str_relative_time(then, now):
+
+        total = (then - now).total_seconds()
+
+        total_hours = int(total // 3600)
+        total_minutes = int((total - (total_hours * 3600)) // 60)
+        total_seconds = int(
+            total - (total_hours * 3600) - (total_minutes * 60))
+
+        if total_hours and total_minutes and total_seconds:
+            out = "{} hours, {} minutes and {} seconds".format(total_hours,
+                                                               total_minutes,
+                                                               total_seconds)
+        elif total_hours and total_minutes:
+            out = "{} hours and {} minutes".format(total_hours,
+                                                   total_minutes)
+        elif total_hours and total_seconds:
+            out = "{} hours and {} seconds".format(total_hours,
+                                                   total_seconds)
+        elif total_minutes and total_seconds:
+            out = "{} minutes and {} seconds".format(total_minutes,
+                                                     total_seconds)
+        elif total_hours:
+            out = "{} hours".format(total_hours)
+        elif total_minutes:
+            out = "{} minutes".format(total_minutes)
+        elif total_seconds:
+            out = "{} seconds".format(total_seconds)
+
+        return out
+
+    relative_time = str_relative_time(then, now)
+    exact_time = str_exact_time(then, now)
+
+    print("Waking up in {}, at {}".format(relative_time, exact_time))
 
 
 def usage():
     usage = """Snore.
 
 Usage:
-    snore for 1h30m
+    snore for 1h10m
+    snore for 1s1m
     snore for 30s
-    snore until 18h23m10s
+    snore until 9h23m10s
+    snore quietly until 14h
 
-    Time can't have spaces and only allows hours, minutes and seconds.
-    Until command supports 24 hours clock"""
+    All arguments are case insensitive
+    Commands:
+        for: sleep for the given time
+        until: sleep until given time has arrived
+    Options:
+        quietly: to silence output
+    Input:
+        Time values postfixed by their respective units separated by nothing
+
+    Output: Sleep duration and wake-up time"""
 
     print(usage)
     sys.exit(2)
 
+# ##################### Main #####################
+
+
+def parse_command_line():
+
+    if len(sys.argv) < 3:
+        usage()
+
+    sys.argv = [arg.lower() for arg in sys.argv]
+
+    quietly = False  # Snoring is loud by default
+    if sys.argv[1] == 'quietly':
+        quietly = True
+        sys.argv.remove('quietly')
+
+    command = sys.argv[1]
+
+    if command not in ['for', 'until']:
+        usage()
+
+    time_input = sys.argv[2]
+
+    return command, time_input, quietly
+
 
 def main():
 
-    if len(sys.argv) < 3 or sys.argv[1] not in ['for', 'until']:
-        usage()
-
-    command = sys.argv[1]
-    time_input = sys.argv[2].lower()
+    command, time_input, quietly = parse_command_line()
 
     time_delta = convert_to_timedelta(time_input)
 
     if command == 'for':
-        snore_for(time_delta)
+        snore_for(time_delta, quietly=quietly)
+    elif command == 'until':
+        wait_until(time_delta, quietly=quietly)
 
-    if command == 'until':
-        wait_until(time_delta)
+    # This programs ends here. Good morning ;)
 
 if __name__ == '__main__':
     main()
