@@ -1,0 +1,96 @@
+#!/usr/bin/env python
+import string
+import sys
+from time import sleep as snore
+
+from datetime import timedelta, date, datetime, time
+
+
+def convert_to_timedelta(time_str):
+    """
+    Returns a timedelta given a string
+    """
+    def convert_to_dict(time_str):
+        """
+        Returns a dictionary with the number of seconds, minutes and hours
+        >>> t1 = convert_to_dict("1h3s")
+        >>> t1['h'] == 1 and t1['s'] == 3 and len(t1) == 2
+        True
+        >>> t2 = convert_to_dict("1h1m1s")
+        >>> t2['h'] == 1 and t2['m'] == 1 and t2['s'] == 1 and len(t2) == 3
+        True
+        >>> t3 = convert_to_dict("1s")
+        >>> t3['s'] == 1 and len(t3) == 1
+        True
+        """
+        units = {'s': 0, 'm': 0, 'h': 0}
+        for unit in units:
+            if unit in time_str:
+                unit_index = time_str.index(unit)
+                i = 1
+                while time_str[unit_index - i] in string.digits:
+                    units[unit] += int(time_str[unit_index - i]) * 10**(i - 1)
+                    i += 1
+
+        return units
+
+    time_dict = convert_to_dict(time_str)
+    return timedelta(hours=time_dict['h'],
+                     minutes=time_dict['m'],
+                     seconds=time_dict['s'])
+
+
+def snore_for(time_delta):
+    then = datetime.now() + time_delta
+    seconds_to_snore = time_delta.total_seconds()
+
+    snore(seconds_to_snore)
+
+
+def wait_until(time_delta):
+
+    def time_to_wait(time_delta):
+        now = datetime.now()
+        midnight = datetime.combine(date.today(), time(0))
+        then = midnight + time_delta
+        if now > then:
+            then += timedelta(days=1)
+
+        return then - now
+
+    snore_for(time_to_wait(time_delta))
+
+
+def usage():
+    usage = """Snore.
+
+Usage:
+    snore for 1h30m
+    snore for 30s
+    snore until 18h23m10s
+
+    Time can't have spaces and only allows hours, minutes and seconds.
+    Until command supports 24 hours clock"""
+
+    print(usage)
+    sys.exit(2)
+
+
+def main():
+
+    if len(sys.argv) < 3 or sys.argv[1] not in ['for', 'until']:
+        usage()
+
+    command = sys.argv[1]
+    time_input = sys.argv[2].lower()
+
+    time_delta = convert_to_timedelta(time_input)
+
+    if command == 'for':
+        snore_for(time_delta)
+
+    if command == 'until':
+        wait_until(time_delta)
+
+if __name__ == '__main__':
+    main()
