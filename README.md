@@ -1,9 +1,19 @@
 Snore.
 
 Usage:
-    snore for 1h30m
+    snore for 1h10m
+    snore for 1s1m
     snore for 30s
-    snore until 18h23m10s
+    snore until 9h23m10s
+    snore quietly until 14h
 
-    Time can't have spaces and only allows hours, minutes and seconds.
-    Until command supports 24 hours clock
+    All arguments are case insensitive
+    Commands:
+        for: sleep for the given time
+        until: sleep until given time has arrived
+    Options:
+        quietly: to silence output
+    Input:
+        Time values postfixed by their respective units separated by nothing
+
+    Output: Sleep duration and wake-up time
