@@ -6,7 +6,18 @@ from time import sleep as snore
 
 from datetime import timedelta, date, datetime, time
 
-# ##################### Parsing #####################
+
+# ##################### Argparser ########################
+
+# Thank you, unutbu:
+# http://stackoverflow.com/questions/4042452/display-help-message-with-python-argparse-when-script-is-called-without-any-argu
+class MyParser(argparse.ArgumentParser):
+    def error(self, message):
+        sys.stderr.write('error: {}\n'.format(message))
+        self.print_help()
+        sys.exit(2)
+
+# ##################### Parsing Time #####################
 
 
 def convert_to_timedelta(time_str):
@@ -142,36 +153,22 @@ def print_exact_relative_time(now, then):
     print("Waking up in {}, at {}".format(relative_time, exact_time))
 
 
-def usage():
-    usage = """Snore.
+# ##################### Main #####################
 
-Usage:
+def parse_command_line():
+
+    example = """Example:
     snore for 1h10m
     snore for 1s1m
     snore for 30s
     snore until 9h23m10s
-    snore quietly until 14h
+    snore -q until 14h
+    snore -0 until 9h23m10s"""
 
-    All arguments are case insensitive
-    Commands:
-        for: sleep for the given time
-        until: sleep until given time has arrived
-    Options:
-        quietly: to silence output
-    Input:
-        Time values postfixed by their respective units separated by nothing
-
-    Output: Sleep duration and wake-up time"""
-
-    print(usage)
-    sys.exit(2)
-
-# ##################### Main #####################
-
-
-def parse_command_line():
-
-    parser = argparse.ArgumentParser()
+    noformat = argparse.RawDescriptionHelpFormatter
+    parser = MyParser(formatter_class=noformat,
+                      description='Sleep tight :)',
+                      epilog=example)
 
     parser.add_argument('--quiet', '-q', action='store_true',
                         help="No output")
@@ -187,7 +184,9 @@ def parse_command_line():
     parser_list = subparser.add_parser('until',
                                        help='Sleep until the given time')
 
-    parser.add_argument('time', action='store')
+    parser.add_argument('time', action='store',
+                        help="Time values postfixed by their respective units\
+ separated by nothing")
 
     return parser.parse_args()
 
