@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import string
 import sys
+import argparse
 from time import sleep as snore
 
 from datetime import timedelta, date, datetime, time
@@ -44,19 +45,33 @@ def convert_to_timedelta(time_str):
 
 # ##################### The bed - Where it sleeps #####################
 
+# Difference between sleepwalking and snoring:
+#                   Sleepwalking polls every second to check the time
+#                   Snoring sleeps all the way
 
-def snore_for(time_delta, quietly):
+# def sleepwalk_for(time_delta, quietly):
+#     now = datetime.now()
+#     then = now + time_delta
+
+
+# def sleepwalk_until(time_delta, quietly):
+#     pass
+
+#     # starttime = time.time()
+#     # for i in range(1, 1000):
+#     #     time.sleep(starttime + i - time.time())
+#     #     # print(datetime.datetime.now())
+#     #     print(time.time() - starttime - i)
+
+
+def snore_for(time_delta):
     now = datetime.now()
     then = now + time_delta
-    seconds_to_snore = time_delta.total_seconds()
 
-    if not(quietly):
-        print_exact_relative_time(then, now)  # Sleeptalking
-
-    snore(seconds_to_snore)
+    return then
 
 
-def wait_until(time_delta, quietly):
+def snore_until(time_delta):
 
     def time_to_wait(time_delta):
         now = datetime.now()
@@ -67,14 +82,14 @@ def wait_until(time_delta, quietly):
 
         return then - now
 
-    snore_for(time_to_wait(time_delta), quietly)
+    return snore_for(time_to_wait(time_delta))
 
 
 # ##################### Preparing output #####################
 
-def print_exact_relative_time(then, now):
+def print_exact_relative_time(now, then):
 
-    def str_exact_time(then, now):
+    def str_exact_time(now, then):
 
         if now.day == then.day:
             day = 'today'
@@ -88,7 +103,7 @@ def print_exact_relative_time(then, now):
 
         return exact_time
 
-    def str_relative_time(then, now):
+    def str_relative_time(now, then):
 
         total = (then - now).total_seconds()
 
@@ -117,10 +132,12 @@ def print_exact_relative_time(then, now):
         elif total_seconds:
             out = "{} seconds".format(total_seconds)
 
+        out += '({} seconds)'.format(round(total))
+
         return out
 
-    relative_time = str_relative_time(then, now)
-    exact_time = str_exact_time(then, now)
+    relative_time = str_relative_time(now, then)
+    exact_time = str_exact_time(now, then)
 
     print("Waking up in {}, at {}".format(relative_time, exact_time))
 
@@ -154,36 +171,44 @@ Usage:
 
 def parse_command_line():
 
-    if len(sys.argv) < 3:
-        usage()
+    parser = argparse.ArgumentParser()
 
-    sys.argv = [arg.lower() for arg in sys.argv]
+    parser.add_argument('--quiet', '-q', action='store_true',
+                        help="No output")
+    parser.add_argument('--dry-run', '-0', action='store_true',
+                        help="Only output")
 
-    quietly = False  # Snoring is loud by default
-    if sys.argv[1] == 'quietly':
-        quietly = True
-        sys.argv.remove('quietly')
+    subparser = parser.add_subparsers(dest='subcommand')
+    subparser.required = True
 
-    command = sys.argv[1]
+    parser_list = subparser.add_parser('for',
+                                       help='Sleep for the given time')
 
-    if command not in ['for', 'until']:
-        usage()
+    parser_list = subparser.add_parser('until',
+                                       help='Sleep until the given time')
 
-    time_input = sys.argv[2]
+    parser.add_argument('time', action='store')
 
-    return command, time_input, quietly
+    return parser.parse_args()
 
 
 def main():
 
-    command, time_input, quietly = parse_command_line()
+    args = parse_command_line()
 
-    time_delta = convert_to_timedelta(time_input)
+    time_delta = convert_to_timedelta(args.time)
+    now = datetime.now()
 
-    if command == 'for':
-        snore_for(time_delta, quietly=quietly)
-    elif command == 'until':
-        wait_until(time_delta, quietly=quietly)
+    if args.subcommand == 'for':
+        then = snore_for(time_delta)
+    elif args.subcommand == 'until':
+        then = snore_until(time_delta)
+
+    if not(args.quiet):
+        print_exact_relative_time(now, then)
+
+    if not(args.dry_run):
+        snore((then - now).total_seconds())
 
     # This programs ends here. Good morning ;)
 
