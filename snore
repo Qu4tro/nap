@@ -2,9 +2,10 @@
 import string
 import sys
 import argparse
-from time import sleep as snore
+import time
 
-from datetime import timedelta, date, datetime, time
+import datetime
+from datetime import timedelta, date, datetime
 
 
 # ##################### Argparser ########################
@@ -54,25 +55,7 @@ def convert_to_timedelta(time_str):
                      seconds=time_dict['s'])
 
 
-# ##################### The bed - Where it sleeps #####################
-
-# Difference between sleepwalking and snoring:
-#                   Sleepwalking polls every second to check the time
-#                   Snoring sleeps all the way
-
-# def sleepwalk_for(time_delta, quietly):
-#     now = datetime.now()
-#     then = now + time_delta
-
-
-# def sleepwalk_until(time_delta, quietly):
-#     pass
-
-#     # starttime = time.time()
-#     # for i in range(1, 1000):
-#     #     time.sleep(starttime + i - time.time())
-#     #     # print(datetime.datetime.now())
-#     #     print(time.time() - starttime - i)
+# ##################### Sleep calculator #####################
 
 
 def snore_for(time_delta):
@@ -86,7 +69,7 @@ def snore_until(time_delta):
 
     def time_to_wait(time_delta):
         now = datetime.now()
-        midnight = datetime.combine(date.today(), time(0))
+        midnight = datetime.combine(date.today(), datetime.time(0))
         then = midnight + time_delta
         if now > then:
             then += timedelta(days=1)
@@ -109,8 +92,10 @@ def print_exact_relative_time(now, then):
         else:
             day = then.date()
 
-        exact_time = "{}:{}:{} of {}".format(then.hour, then.minute,
-                                             then.second, day)
+        exact_time = "{:02d}:{:02d}:{:02d} of {}".format(then.hour,
+                                                         then.minute,
+                                                         then.second,
+                                                         day)
 
         return exact_time
 
@@ -153,6 +138,38 @@ def print_exact_relative_time(now, then):
     print("Waking up in {}, at {}".format(relative_time, exact_time))
 
 
+# ##################### Sleep #####################
+
+def snore(now, then, poll):
+
+    seconds_to_sleep = (then - now).total_seconds()
+
+    if poll:
+
+        # Bonus :D Uncomment code below to enjoy ;)
+        # rtcwake is a unix utility that wakes up your computer
+        # More info: http://linux.die.net/man/8/rtcwake
+
+        """
+        import subprocess
+        import os
+        time_it_takes_to_wakeup = 3
+        seconds_until_wakeup_call = str(round(seconds_to_sleep -
+                                              time_it_takes_to_wakeup))
+        with open(os.devnull) as null:
+            subprocess.call(['rtcwake', '-m', 'no', '-s',
+                            seconds_until_wakeup_call],
+                            stdout=null, stderr=null)
+        """
+
+        while 1:
+            time.sleep(1)
+            if datetime.now() > then:
+                break
+    else:
+        time.sleep(seconds_to_sleep)
+
+
 # ##################### Main #####################
 
 def parse_command_line():
@@ -174,6 +191,10 @@ def parse_command_line():
                         help="No output")
     parser.add_argument('--dry-run', '-0', action='store_true',
                         help="Only output")
+    parser.add_argument('--poll-time', '-p', action='store_true',
+                        help=("Instead of sleeping the entire time, "
+                              "checks every second if the given time "
+                              "has arriven."))
 
     subparser = parser.add_subparsers(dest='subcommand')
     subparser.required = True
@@ -207,7 +228,7 @@ def main():
         print_exact_relative_time(now, then)
 
     if not(args.dry_run):
-        snore((then - now).total_seconds())
+        snore(now, then, args.poll_time)
 
     # This programs ends here. Good morning ;)
 
