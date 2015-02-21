@@ -1,4 +1,5 @@
 *Snore*
+==============
 
     usage: snore [-h] [--quiet] [--dry-run] [--poll-time] {for,until} ... time
 
