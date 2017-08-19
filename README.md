@@ -1,7 +1,7 @@
-*Snore*
+*Nap*
 ==============
 
-    usage: snore [-h] [--quiet] [--dry-run] [--poll-time] {for,until} ... time
+    usage: nap [-h] [--quiet] [--dry-run] [--poll-time] {for,until} ... time
 
     Sleep tight :)
 
@@ -20,9 +20,9 @@
                        the given time has arriven.
 
     Example:
-        snore for 1h10m
-        snore for 1s1m
-        snore for 30s
-        snore until 9h23m10s
-        snore -q until 14h
-        snore -0 until 9h23m10s
+        nap for 1h10m
+        nap for 1s1m
+        nap for 30s
+        nap until 9h23m10s
+        nap -q until 14h
+        nap -0 until 9h23m10s
