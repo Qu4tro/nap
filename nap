@@ -58,7 +58,7 @@ def convert_to_timedelta(time_str):
 # ##################### Sleep calculator #####################
 
 
-def snore_for(time_delta):
+def nap_for(time_delta):
     now = datetime.now()
     then = now + time_delta
 
@@ -140,7 +140,7 @@ def print_exact_relative_time(now, then):
 
 # ##################### Sleep #####################
 
-def snore(now, then, poll):
+def nap(now, then, poll):
 
     seconds_to_sleep = (then - now).total_seconds()
 
@@ -175,12 +175,12 @@ def snore(now, then, poll):
 def parse_command_line():
 
     example = """Example:
-    snore for 1h10m
-    snore for 1s1m
-    snore for 30s
-    snore until 9h23m10s
-    snore -q until 14h
-    snore -0 until 9h23m10s"""
+    nap for 1h10m
+    nap for 1s1m
+    nap for 30s
+    nap until 9h23m10s
+    nap -q until 14h
+    nap -0 until 9h23m10s"""
 
     noformat = argparse.RawDescriptionHelpFormatter
     parser = MyParser(formatter_class=noformat,
@@ -228,7 +228,7 @@ def main():
         print_exact_relative_time(now, then)
 
     if not(args.dry_run):
-        snore(now, then, args.poll_time)
+        nap(now, then, args.poll_time)
 
     # This programs ends here. Good morning ;)
 
